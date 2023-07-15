@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -30,11 +31,16 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController _billAmount;
-  dynamic tip = 0.0;
-  
-  void calculateTip(bill, {tipPercent = 12}) {
+  late TextEditingController _tipPercent;
+
+  num tip = 0.0;
+  bool roundUp = false;
+
+  void calculateTip() {
     setState(() {
-      tip =  tipPercent * double.parse(bill) / 100.0;
+      var calculatedTip =
+          double.parse(_tipPercent.text) * double.parse(_billAmount.text) / 100;
+      tip = roundUp ? calculatedTip.round() : calculatedTip;
     });
   }
 
@@ -42,11 +48,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _billAmount = TextEditingController();
+    _tipPercent = TextEditingController();
   }
 
   @override
   void dispose() {
     _billAmount.dispose();
+    _tipPercent.dispose();
     super.dispose();
   }
 
@@ -55,11 +63,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: const Text("Tip Calculator"),
       ),
       body: Center(
         child: Column(
           children: [
+            const SizedBox(
+              height: 30,
+            ),
             SizedBox(
               width: 250,
               child: TextField(
@@ -68,16 +79,62 @@ class _MyHomePageState extends State<MyHomePage> {
                   border: OutlineInputBorder(),
                   labelText: 'Bill Amount',
                 ),
-                onSubmitted: (value) => calculateTip(value),
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
               ),
             ),
-            const SizedBox(
-              height: 20,
+            const Spacer(),
+            SizedBox(
+              width: 250,
+              child: TextField(
+                controller: _tipPercent,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Tip Percent',
+                ),
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (value) => calculateTip(),
+              ),
             ),
-            Text("Tip : $tip")
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Round Up ?",
+                  style: TextStyle(fontSize: 20),
+                ),
+                Switch(
+                    value: roundUp,
+                    onChanged: (bool value) {
+                      setState(() {
+                        roundUp = !roundUp;
+                      });
+                    }),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              "Bonus Tip : $tip",
+              style: const TextStyle(fontSize: 30),
+            )
           ],
         ),
       ),
+    );
+  }
+}
+
+class Spacer extends StatelessWidget {
+  const Spacer({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 20,
     );
   }
 }
